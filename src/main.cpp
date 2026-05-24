@@ -4,15 +4,6 @@
 #define M1_IN1 1
 #define M1_IN2 2
 
-#define M2_IN1 3
-#define M2_IN2 14
-
-#define M3_IN1 21
-#define M3_IN2 47
-
-#define M4_IN1 48
-#define M4_IN2 35
-
 void testMotor(int pin1, int pin2) {
 
   pinMode(pin1, OUTPUT);
@@ -44,14 +35,17 @@ void testMotor(int pin1, int pin2) {
 }
 
 void setup() {
-  testMotor(M1_IN1, M1_IN2);
+
+  Serial.begin(115200);
+  delay(2000);
+
+  Serial.println("Inicio");
+
+  pinMode(M1_IN1, OUTPUT);
+  pinMode(M1_IN2, OUTPUT);
+
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-}
-
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+  testMotor(M1_IN1, M1_IN2);
 }
