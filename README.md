@@ -1,5 +1,6 @@
 # ESP32-S3 Cam Car
 
+<img width="1200" height="1600" alt="image" src="https://github.com/user-attachments/assets/ae6310e9-1694-48f6-8a20-8580d80cb28e" />
 
 
 Vehículo controlado remotamente con cámara en tiempo real, usando ESP-NOW como protocolo de comunicación inalámbrica.
