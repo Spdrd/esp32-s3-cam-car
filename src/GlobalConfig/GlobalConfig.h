@@ -18,3 +18,16 @@
 #define VSYNC_GPIO_NUM   6
 #define HREF_GPIO_NUM    7
 #define PCLK_GPIO_NUM    13
+
+
+#define M1_IN1 1
+#define M1_IN2 2
+
+#define M2_IN1 3
+#define M2_IN2 14
+
+#define M3_IN1 21
+#define M3_IN2 47
+
+#define M4_IN1 48
+#define M4_IN2 35
