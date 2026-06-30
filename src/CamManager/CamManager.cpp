@@ -54,6 +54,9 @@ bool CamManager::begin() {
         return false;
     }
 
+    sensor_t* s = esp_camera_sensor_get();
+    s->set_hmirror(s, 1);
+
     Serial.println("Camara lista");
     return true;
 }

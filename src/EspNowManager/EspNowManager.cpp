@@ -1,4 +1,5 @@
 #include "EspNowManager.h"
+#include <esp_wifi.h>
 
 EspNowRecvCallback EspNowManager::_recvCallback = nullptr;
 
@@ -25,6 +26,7 @@ bool EspNowManager::begin() {
         return false;
     }
 
+    esp_wifi_config_espnow_rate(WIFI_IF_STA, WIFI_PHY_RATE_1M_L);
     esp_now_register_recv_cb(_rawRecvCallback);
 
     esp_now_peer_info_t peerInfo = {};

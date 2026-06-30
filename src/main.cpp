@@ -14,6 +14,7 @@ CamManager cam(&espNow);
 MotorController motors;
 
 volatile CommandType lastCommand = CMD_STOP;
+volatile uint8_t lastSpeed = 255;
 volatile bool newCommand = false;
 
 void onDataReceived(const uint8_t* data, int len) {
@@ -21,6 +22,7 @@ void onDataReceived(const uint8_t* data, int len) {
         const ControlPacket* pkt = reinterpret_cast<const ControlPacket*>(data);
         if (pkt->magic == CONTROL_MAGIC) {
             lastCommand = pkt->command;
+            lastSpeed = pkt->speed;
             newCommand = true;
         }
     }
@@ -54,7 +56,7 @@ void setup() {
 void loop() {
     if (newCommand) {
         newCommand = false;
-        motors.execute(lastCommand);
+        motors.execute(lastCommand, lastSpeed);
     }
 
     cam.sendFrame();

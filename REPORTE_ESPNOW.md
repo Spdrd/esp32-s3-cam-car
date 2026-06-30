@@ -92,7 +92,12 @@ El vehículo envía frames JPEG fragmentados:
 ### Controlador remoto (a implementar)
 - **WiFi mode:** debe ser `WIFI_STA`
 - **Canal ESP-NOW:** 0
-- **Peer address:** la MAC del ESP32-S3 del vehículo (obtenida del serial)
+- **Data rate:** `WIFI_PHY_RATE_1M_L` (debe coincidir con el vehículo)
+- **Peer address:** la MAC del ESP32-S3 del vehículo: `80:B5:4E:C6:F9:1C`
+- **IMPORTANTE:** Después de `esp_now_init()` agregar:
+  ```cpp
+  esp_wifi_config_espnow_rate(WIFI_IF_STA, WIFI_PHY_RATE_1M_L);
+  ```
 
 ---
 
