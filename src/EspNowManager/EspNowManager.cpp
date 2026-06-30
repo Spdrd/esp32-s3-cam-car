@@ -1,13 +1,23 @@
-// EspNowManager.cpp
-
 #include "EspNowManager.h"
 
-EspNowManager::EspNowManager(uint8_t* peerAddress) {
-    _peerAddress = peerAddress;
+EspNowRecvCallback EspNowManager::_recvCallback = nullptr;
+
+EspNowManager::EspNowManager(const uint8_t* peerAddress) {
+    memcpy(_peerAddress, peerAddress, 6);
+}
+
+void EspNowManager::_rawRecvCallback(const uint8_t* mac,
+                                     const uint8_t* data, int len) {
+    if (_recvCallback) {
+        _recvCallback(data, len);
+    }
+}
+
+void EspNowManager::onReceive(EspNowRecvCallback cb) {
+    _recvCallback = cb;
 }
 
 bool EspNowManager::begin() {
-
     WiFi.mode(WIFI_STA);
 
     if (esp_now_init() != ESP_OK) {
@@ -15,10 +25,10 @@ bool EspNowManager::begin() {
         return false;
     }
 
+    esp_now_register_recv_cb(_rawRecvCallback);
+
     esp_now_peer_info_t peerInfo = {};
-
     memcpy(peerInfo.peer_addr, _peerAddress, 6);
-
     peerInfo.channel = 0;
     peerInfo.encrypt = false;
 
@@ -28,17 +38,9 @@ bool EspNowManager::begin() {
     }
 
     Serial.println("ESP-NOW listo");
-
     return true;
 }
 
 bool EspNowManager::send(const uint8_t* data, size_t len) {
-
-    esp_err_t result = esp_now_send(
-        _peerAddress,
-        data,
-        len
-    );
-
-    return result == ESP_OK;
+    return esp_now_send(_peerAddress, data, len) == ESP_OK;
 }

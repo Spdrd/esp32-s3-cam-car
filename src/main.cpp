@@ -1,83 +1,61 @@
 #include <Arduino.h>
 
-
 #include "GlobalConfig/GlobalConfig.h"
+#include "Protocol/Protocol.h"
+#include "EspNowManager/EspNowManager.h"
+#include "CamManager/CamManager.h"
+#include "MotorController/MotorController.h"
 
+// MAC del controlador remoto — cambiar por la MAC real del otro ESP32
+uint8_t controllerMac[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
+EspNowManager espNow(controllerMac);
+CamManager cam(&espNow);
+MotorController motors;
 
-void testMotors(int m1pin1, int m1pin2, int m2pin1, int m2pin2, int m3pin1, int m3pin2, int m4pin1, int m4pin2) {
+volatile CommandType lastCommand = CMD_STOP;
+volatile bool newCommand = false;
 
-  pinMode(m1pin1, OUTPUT);
-  pinMode(m1pin2, OUTPUT);
-
-  // Motor hacia adelante
-  Serial.println("Adelante");
-  digitalWrite(m1pin1, HIGH);
-  digitalWrite(m1pin2, LOW);
-  digitalWrite(m2pin1, HIGH);
-  digitalWrite(m2pin2, LOW);
-  digitalWrite(m3pin1, HIGH);
-  digitalWrite(m3pin2, LOW);
-  digitalWrite(m4pin1, HIGH);
-  digitalWrite(m4pin2, LOW);
-  delay(2000);
-
-  // Frenar
-  Serial.println("Stop");
-  digitalWrite(m1pin1, LOW);
-  digitalWrite(m1pin2, LOW);
-  digitalWrite(m2pin1, LOW);
-  digitalWrite(m2pin2, LOW);
-  digitalWrite(m3pin1, LOW);
-  digitalWrite(m3pin2, LOW);
-  digitalWrite(m4pin1, LOW);
-  digitalWrite(m4pin2, LOW);
-  delay(1000);
-
-  // Motor hacia atrás
-  Serial.println("Atras");
-  digitalWrite(m1pin1, LOW);
-  digitalWrite(m1pin2, HIGH);
-  digitalWrite(m2pin1, LOW);
-  digitalWrite(m2pin2, HIGH);
-  digitalWrite(m3pin1, LOW);
-  digitalWrite(m3pin2, HIGH);
-  digitalWrite(m4pin1, LOW);
-  digitalWrite(m4pin2, HIGH);
-  delay(2000);
-
-  // Frenar
-  Serial.println("Stop");
-  digitalWrite(m1pin1, LOW);
-  digitalWrite(m1pin2, LOW);
-  digitalWrite(m2pin1, LOW);
-  digitalWrite(m2pin2, LOW);
-  digitalWrite(m3pin1, LOW);
-  digitalWrite(m3pin2, LOW);
-  digitalWrite(m4pin1, LOW);
-  digitalWrite(m4pin2, LOW);
-  delay(1000);
+void onDataReceived(const uint8_t* data, int len) {
+    if (len == sizeof(ControlPacket)) {
+        const ControlPacket* pkt = reinterpret_cast<const ControlPacket*>(data);
+        if (pkt->magic == CONTROL_MAGIC) {
+            lastCommand = pkt->command;
+            newCommand = true;
+        }
+    }
 }
 
 void setup() {
+    Serial.begin(115200);
+    delay(1000);
+    Serial.println("ESP32-S3 Cam Car iniciando...");
+    Serial.print("MAC: ");
+    Serial.println(WiFi.macAddress());
 
-  Serial.begin(115200);
-  delay(2000);
+    motors.begin(M1_IN1, M1_IN2, M2_IN1, M2_IN2,
+                 M3_IN1, M3_IN2, M4_IN1, M4_IN2);
 
-  Serial.println("Inicio");
+    espNow.onReceive(onDataReceived);
 
-  pinMode(M1_IN1, OUTPUT);
-  pinMode(M1_IN2, OUTPUT);
-  pinMode(M2_IN1, OUTPUT);
-  pinMode(M2_IN2, OUTPUT);
-  pinMode(M3_IN1, OUTPUT);
-  pinMode(M3_IN2, OUTPUT);
-  pinMode(M4_IN1, OUTPUT);
-  pinMode(M4_IN2, OUTPUT);
-  
+    if (!espNow.begin()) {
+        Serial.println("Fallo ESP-NOW");
+        while (true) delay(1000);
+    }
+
+    if (!cam.begin()) {
+        Serial.println("Fallo camara");
+        while (true) delay(1000);
+    }
+
+    Serial.println("Todo listo. Esperando comandos...");
 }
 
 void loop() {
-  // testMotor(M1_IN1, M1_IN2);
-  testMotors(M1_IN1, M1_IN2, M2_IN1, M2_IN2, M3_IN1, M3_IN2, M4_IN1, M4_IN2);
+    if (newCommand) {
+        newCommand = false;
+        motors.execute(lastCommand);
+    }
+
+    cam.sendFrame();
 }

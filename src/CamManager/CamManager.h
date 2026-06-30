@@ -1,9 +1,8 @@
-// CameraManager.h
-
 #pragma once
 
 #include "esp_camera.h"
 #include "../EspNowManager/EspNowManager.h"
+#include "../Protocol/Protocol.h"
 
 class CamManager {
 public:
